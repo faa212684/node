@@ -413,7 +413,10 @@ void AsyncWrap::AsyncReset(const FunctionCallbackInfo<Value>& args) {
   ASSIGN_OR_RETURN_UNWRAP(&wrap, args.Holder());
   double execution_async_id =
       args[0]->IsNumber() ? args[0].As<Number>()->Value() : -1;
-  wrap->AsyncReset(execution_async_id);
+  // This assumes that when asyncReset is called from JS, it is always about
+  // reusing an existing AsyncWrap instance and never to initialize a freshly
+  // created AsyncWrap instance.
+  wrap->AsyncReset(execution_async_id, false, true);
 }
 
 
@@ -605,7 +608,16 @@ void AsyncWrap::EmitDestroy(Environment* env, double async_id) {
 // Generalized call for both the constructor and for handles that are pooled
 // and reused over their lifetime. This way a new uid can be assigned when
 // the resource is pulled out of the pool and put back into use.
-void AsyncWrap::AsyncReset(double execution_async_id, bool silent) {
+void AsyncWrap::AsyncReset(double execution_async_id,
+                           bool silent,
+                           bool reused) {
+  if (reused) {
+    // If this instance was in use before, we have already emitted an init with
+    // its previous async_id and need to emit a matching destroy for that
+    // before generating a new async_id.
+    EmitDestroy(env(), get_async_id());
+  }
+
   async_id_ =
     execution_async_id == -1 ? env()->new_async_id() : execution_async_id;
   trigger_async_id_ = env()->get_default_trigger_async_id();

@@ -147,9 +147,7 @@ class AsyncWrap : public BaseObject {
 
   inline double get_trigger_async_id() const;
 
-  void AsyncReset(double execution_async_id = -1,
-                  bool silent = false,
-                  bool reused = false);
+  void AsyncReset(double execution_async_id = -1, bool silent = false);
 
   // Only call these within a valid HandleScope.
   v8::MaybeLocal<v8::Value> MakeCallback(const v8::Local<v8::Function> cb,

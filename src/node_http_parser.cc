@@ -479,7 +479,7 @@ class Parser : public AsyncWrap, public StreamListener {
     // We must only call AsyncReset for the latter case, because AsyncReset has
     // already been called via the constructor for the former case.
     if (isReused) {
-      parser->AsyncReset(-1, false, true);
+      parser->AsyncReset();
     }
     parser->Init(type);
   }
